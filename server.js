@@ -10,6 +10,45 @@ const SECRET = 'supersecret';
 const axios = require('axios');
 
 let users = [];
+const fakeUsers = {
+  'vux': {
+    username: 'vux',
+    role: 'user',
+    email: 'vux@nosec.local',
+    bio: 'Just a regular NoSec user.'
+  },
+  'admin': {
+    username: 'admin',
+    role: 'admin',
+    email: 'admin@nosec.local',
+    bio: 'Super secret administrator profile 👀'
+  },
+  'bob': {
+    username: 'bob',
+    role: 'user',
+    email: 'bob@nosec.local',
+    bio: 'Frontend guy with a love for React and 🍕.'
+  },
+  'alice': {
+    username: 'alice',
+    role: 'user',
+    email: 'alice@nosec.local',
+    bio: 'Backend engineer — Python and caffeine enthusiast.'
+  },
+  'eve': {
+    username: 'eve',
+    role: 'user',
+    email: 'eve@nosec.local',
+    bio: '“Just testing security.” 👀'
+  },
+  'internal': {
+    username: 'internal',
+    role: 'internal-only',
+    email: 'internal@nosec.local',
+    bio: 'System service account. Not meant for public eyes.'
+  }
+};
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -269,7 +308,64 @@ app.get('/ssrf', checkAuth, async (req, res) => {
 
   res.send(html);
 });
+// 🧱 Profile page generator
+function buildProfileHTML(profile) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>🔎 IDOR Lab - NoSec</title>
+      <link rel="stylesheet" href="/style.css">
+    </head>
+    <body>
+      <div class="container">
+        <h2>🔎 IDOR Lab</h2>
+        <p><strong>Username:</strong> ${profile.username}</p>
+        <p><strong>Email:</strong> ${profile.email}</p>
+        <p><strong>Role:</strong> ${profile.role}</p>
+        <p><strong>Bio:</strong> ${profile.bio}</p>
 
+        <hr>
+        <p>This is a public user profile.</p>
+        <a href="/dashboard">⬅️ Back to Dashboard</a>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// 🚪 /profile route with IDOR logic
+app.get('/profile', checkAuth, (req, res) => {
+  const userParam = req.query.user;
+
+  // Attacker tries to access someone else's profile
+  if (userParam) {
+    const profile = fakeUsers[userParam];
+    if (!profile) {
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>User Not Found</title><link rel="stylesheet" href="/style.css"></head>
+        <body>
+          <div class="container">
+            <h2>❌ User Not Found</h2>
+            <p>This profile doesn't exist.</p>
+            <a href="/profile">⬅️ Back to profile list</a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    return res.send(buildProfileHTML(profile));
+  }
+
+  // No param — show a random non-admin user
+  const usernames = Object.keys(fakeUsers).filter(u => u !== 'admin');
+  const randomUser = fakeUsers[usernames[Math.floor(Math.random() * usernames.length)]];
+
+  res.send(buildProfileHTML(randomUser));
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 NoSec running at http://localhost:${PORT}`);
