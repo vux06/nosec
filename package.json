@@ -19,6 +19,7 @@
   "homepage": "https://github.com/vux06/nosec#readme",
   "dependencies": {
     "axios": "^1.10.0",
-    "cookie-parser": "^1.4.7"
+    "cookie-parser": "^1.4.7",
+    "multer": "^2.0.1"
   }
 }

@@ -8,6 +8,8 @@ const app = express();
 const PORT = 3000;
 const SECRET = 'supersecret';
 const axios = require('axios');
+const multer = require('multer');
+const fs = require('fs');
 
 let users = [];
 const fakeUsers = {
@@ -366,6 +368,60 @@ app.get('/profile', checkAuth, (req, res) => {
 
   res.send(buildProfileHTML(randomUser));
 });
+
+
+// Ensure uploads folder exists
+if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads');
+
+// 🧨 Storage config (no filtering)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, file.originalname)
+});
+const upload = multer({ storage });
+
+// 🧱 Upload form (GET)
+app.get('/upload', checkAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.send('Admins only');
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>📤 File Upload Lab - NoSec</title>
+      <link rel="stylesheet" href="/style.css">
+    </head>
+    <body>
+      <div class="container">
+        <h2>📤 File Upload Lab</h2>
+        <p>Upload any file. Try bypassing filters 😉</p>
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+          <input type="file" name="file" required />
+          <button type="submit">Upload</button>
+        </form>
+        <p>Uploaded files appear at <code>/uploads/&lt;filename&gt;</code></p>
+        <a href="/dashboard">⬅️ Back to Dashboard</a>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// 📥 Handle uploads (POST) - VULNERABLE
+app.post('/upload', checkAuth, upload.single('file'), (req, res) => {
+  if (req.user.role !== 'admin') return res.send('Admins only');
+
+  if (!req.file) return res.send('No file uploaded.');
+  res.send(`
+    <h3>✅ File uploaded!</h3>
+    <p><a href="/uploads/${req.file.originalname}" target="_blank">View File</a></p>
+    <a href="/upload">⬅️ Upload Another</a>
+  `);
+});
+
+// 🌐 Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 
 app.listen(PORT, () => {
   console.log(`🚀 NoSec running at http://localhost:${PORT}`);
