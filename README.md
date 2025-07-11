@@ -21,6 +21,15 @@ You can exploit vulnerabilities like **JWT manipulation**, **XSS**, **File Uploa
 
 ---
 
+
+
+# 🧑‍💻 Author
+
+vux06
+Ethical Hacker · Builder · Bug Bounty Hunter
+🐙 GitHub: github.com/vux06
+
+
 ## 💣 Vulnerabilities Included
 
 | # | Vulnerability         | Path                          | Status |
@@ -45,11 +54,3 @@ cd nosec
 npm install
 
 node server.js
-
-
-
-# 🧑‍💻 Author
-
-vux06
-Ethical Hacker · Builder · Bug Bounty Hunter
-🐙 GitHub: github.com/vux06
