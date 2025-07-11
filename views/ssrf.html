@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🌐 SSRF Lab - NoSec</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>🌐 SSRF Lab</h2>
+    <p>Enter a URL to fetch:</p>
+    <form method="GET" action="/ssrf">
+      <input name="target" placeholder="e.g. http://example.com" required />
+      <button type="submit">Fetch</button>
+    </form>
+
+    <% if (output) { %>
+    <hr>
+    <h3>Fetched Content:</h3>
+    <pre><%= output %></pre>
+    <% } %>
+  </div>
+</body>
+</html>

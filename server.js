@@ -7,6 +7,7 @@ const { exec } = require('child_process');
 const app = express();
 const PORT = 3000;
 const SECRET = 'supersecret';
+const axios = require('axios');
 
 let users = [];
 
@@ -195,6 +196,80 @@ app.get('/os-command', checkAuth, (req, res) => {
     res.send(html);
   }
 });
+
+function escapeHTML(str) {
+  return str
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+app.get('/ssrf', checkAuth, async (req, res) => {
+  if (req.user.role !== 'admin') return res.send('Admins only');
+
+  const target = req.query.target;
+  let output = null;
+
+  if (target) {
+    try {
+      const response = await axios.get(target, { timeout: 3000 });
+      output = response.data.toString();
+
+      // Limit output length to avoid UI breaking
+      if (output.length > 10000) {
+        output = output.substring(0, 10000) + '\n\n...truncated...';
+      }
+    } catch (err) {
+      output = `Error fetching URL: ${err.message}`;
+    }
+  }
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>🌐 SSRF Lab - NoSec</title>
+      <link rel="stylesheet" href="/style.css">
+      <style>
+        pre {
+          background-color: #1e1e1e;
+          color: #00ff91;
+          padding: 1rem;
+          border-radius: 6px;
+          overflow: auto;
+          max-height: 400px;
+          max-width: 100%;
+          box-sizing: border-box;
+          white-space: pre-wrap;
+          word-break: break-word;
+          font-family: monospace;
+          font-size: 0.9rem;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h2>🌐 SSRF Lab</h2>
+        <p>Enter a URL to fetch:</p>
+        <form method="GET" action="/ssrf">
+          <input name="target" placeholder="e.g. http://example.com" required />
+          <button type="submit">Fetch</button>
+        </form>
+
+        ${output !== null ? `
+          <hr>
+          <h3>Fetched Content:</h3>
+          <pre>${escapeHTML(output)}</pre>
+        ` : ''}
+      </div>
+    </body>
+    </html>
+  `;
+
+  res.send(html);
+});
+
 
 app.listen(PORT, () => {
   console.log(`🚀 NoSec running at http://localhost:${PORT}`);
