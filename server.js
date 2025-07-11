@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-
+const { exec } = require('child_process');
 const app = express();
 const PORT = 3000;
 const SECRET = 'supersecret';
@@ -123,6 +123,63 @@ app.get('/dashboard.html', checkAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
 });
 
+app.get('/os-command', checkAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.send('Admins only');
+
+  const host = req.query.host;
+
+  if (host) {
+    exec(`ping -c 2 ${host}`, (err, stdout, stderr) => {
+      const output = stdout || stderr || 'Error executing command';
+      renderForm(res, output);
+    });
+  } else {
+    renderForm(res, null);
+  }
+
+  function renderForm(res, output) {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>OS Command Injection - NoSec</title>
+        <link rel="stylesheet" href="/style.css">
+        <style>
+          pre {
+            background-color: #1e1e1e;
+            color: #f1f1f1;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            max-width: 100%;
+            box-sizing: border-box;
+            white-space: pre-wrap;
+            word-break: break-all;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h2>🧨 OS Command Injection Lab</h2>
+          <p>Enter a host to ping:</p>
+          <form method="GET" action="/os-command">
+            <input name="host" placeholder="e.g. google.com" required />
+            <button type="submit">Ping</button>
+          </form>
+
+          ${output !== null ? `
+            <hr>
+            <h3>Command Output:</h3>
+            <pre>${output}</pre>
+          ` : ''}
+        </div>
+      </body>
+      </html>
+    `;
+
+    res.send(html);
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 NoSec running at http://localhost:${PORT}`);
