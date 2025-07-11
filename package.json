@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/vux06/nosec/issues"
   },
-  "homepage": "https://github.com/vux06/nosec#readme"
+  "homepage": "https://github.com/vux06/nosec#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.7"
+  }
 }
