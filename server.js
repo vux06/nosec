@@ -53,6 +53,7 @@ function checkAuth(req, res, next) {
 app.get('/welcome.html', checkAuth, (req, res) => {
   if (req.user.role !== 'user') return res.send('Access denied');
   res.sendFile(path.join(__dirname, 'views', 'welcome.html'));
+  res.redirect('/blog.html');
 });
 
 app.get('/admin.html', checkAuth, (req, res) => {
@@ -60,7 +61,70 @@ app.get('/admin.html', checkAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'admin.html'));
 });
 
+app.get('/blog.html', checkAuth, (req, res) => {
+  if (req.user.role !== 'user') return res.send('Access denied');
+
+  const comment = req.query.comment || '';
+
+  const blogHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>NoSec Blog</title>
+      <link rel="stylesheet" href="/style.css">
+    </head>
+    <body>
+      <div class="container">
+        <h1>How to Build a Secure Website (but don't trust this blog)</h1>
+        <p style="color: #ccc; font-size: 14px;">Posted on: <em>July 11, 2025</em></p>
+        <p>
+          Building a secure website involves multiple layers of defense. At a minimum, you should:
+          <ul>
+            <li>Validate and sanitize all user inputs</li>
+            <li>Use secure headers (e.g., CSP, HSTS)</li>
+            <li>Implement proper authentication and authorization</li>
+            <li>Protect against common vulnerabilities like XSS, CSRF, SQLi, and IDOR</li>
+            <li>Use HTTPS everywhere</li>
+          </ul>
+        </p>
+        <p>
+          But ironically, this blog doesn't do any of that. In fact, it welcomes you to try exploiting it. 😉
+        </p>
+
+        <div style="margin-top: 2rem; padding: 1rem; background-color: #222; border-radius: 8px;">
+          <strong>👀 Try visiting the <a href="/admin.html" style="color: #ff0055;">Admin Page</a></strong>.<br/>
+          Can you access it without being an admin?
+        </div>
+
+        <hr />
+        <h2>Leave a comment</h2>
+        <form method="GET" action="/blog.html">
+          <input type="text" name="comment" placeholder="Say something..." />
+          <button type="submit">Post</button>
+        </form>
+
+        <hr />
+        <h3>Recent Comment:</h3>
+        <div style="padding: 1rem; background-color: #222; color: #fff; border-radius: 6px;">
+          ${comment}
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  res.send(blogHtml);
+});
+
+
+
+app.get('/dashboard.html', checkAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.send('Access denied');
+  res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
+});
+
 
 app.listen(PORT, () => {
   console.log(`🚀 NoSec running at http://localhost:${PORT}`);
 });
+
