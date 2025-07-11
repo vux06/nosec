@@ -116,6 +116,21 @@ app.get('/blog.html', checkAuth, (req, res) => {
   res.send(blogHtml);
 });
 
+// Route with basic 403 logic + known bypass vectors
+app.get(['/admin/settings', '/admin/settings/', '/admin/settings%2f', '/..;/admin/settings'], (req, res) => {
+  // Simulated protection: only allow if bypass header is present
+  const bypassHeader = req.headers['x-original-url'] || req.headers['x-rewrite-url'];
+
+  if (bypassHeader === '/admin/settings') {
+    return res.sendFile(path.join(__dirname, 'views', 'admin-settings.html'));
+  }
+
+  // Block normally
+  res.status(403).send(`
+    <h2>🚫 403 Forbidden</h2>
+    <p>Access to this resource is denied.</p>
+  `);
+});
 
 
 app.get('/dashboard.html', checkAuth, (req, res) => {
