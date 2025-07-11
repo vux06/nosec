@@ -41,3 +41,15 @@ You can exploit vulnerabilities like **JWT manipulation**, **XSS**, **File Uploa
 ```bash
 git clone https://github.com/yourusername/nosec.git
 cd nosec
+
+npm install
+
+node server.js
+
+
+
+# 🧑‍💻 Author
+
+vux06
+Ethical Hacker · Builder · Bug Bounty Hunter
+🐙 GitHub: github.com/vux06
